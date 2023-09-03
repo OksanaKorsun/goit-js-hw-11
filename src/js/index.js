@@ -1,8 +1,7 @@
 import Notiflix from 'notiflix';
 import axios from 'axios';
-// import { serviceSearch } from './pix-api';
-// import SimpleLightbox from "simplelightbox";
-// import "simplelightbox/dist/simple-lightbox.min.css";
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const elements = {
   form: document.querySelector('.js-search-form'),
@@ -13,6 +12,8 @@ const elements = {
 let currentPage = 1;
 elements.form.addEventListener('submit', handlerSubmit);
 elements.btnLoad.addEventListener('click', handlerLoadMore);
+
+const lightbox = new SimpleLightbox('.gallery a');
 
 async function serviceSearch(searchInfo) {
   const BASE_URL = 'https://pixabay.com/api/';
@@ -32,14 +33,32 @@ async function serviceSearch(searchInfo) {
 
 function handlerSubmit(event) {
   event.preventDefault();
-  // const searchInfo = event.target.value;
-  // const { searchQuery } = evt.currentTarget.elements;
-  serviceSearch(elements.input.value)
+  elements.container.innerHTML = '';
+  const searchInfo = elements.input.value.trim();
+  if (searchInfo === '') {
+    return;
+  }
+  serviceSearch(searchInfo)
     .then(data => {
       elements.container.insertAdjacentHTML('beforeend', createMarkup(data));
-      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`);
+      lightbox.refresh();
+      const { height: cardHeight } = document
+        .querySelector('.gallery')
+        .firstElementChild.getBoundingClientRect();
+
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      });
+      if (data.hits.length) {
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`);
+      } else {
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        elements.container.innerHTML = '';
+      }
       const totalPages = data.totalHits / data.hits.length;
-      console.log(totalPages);
       if (currentPage < totalPages) {
         elements.btnLoad.classList.replace('load-more-hidden', 'load-more');
       }
@@ -57,6 +76,15 @@ function handlerLoadMore() {
   serviceSearch(elements.input.value)
     .then(data => {
       elements.container.insertAdjacentHTML('beforeend', createMarkup(data));
+      lightbox.refresh();
+      const { height: cardHeight } = document
+        .querySelector('.gallery')
+        .firstElementChild.getBoundingClientRect();
+
+      window.scrollBy({
+        top: cardHeight * 2,
+        behavior: 'smooth',
+      });
       if (currentPage >= data.totalHits / data.hits.length) {
         elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
       }
