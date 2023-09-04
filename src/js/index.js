@@ -24,79 +24,84 @@ async function serviceSearch(searchInfo) {
     orientation: 'horizontal',
     safesearch: true,
     page: currentPage,
-    per_page: 20,
+    per_page: 40,
   });
 
   const responce = await axios.get(`${BASE_URL}?${params}`);
   return await responce.data;
 }
 
-function handlerSubmit(event) {
+async function handlerSubmit(event) {
   event.preventDefault();
   elements.container.innerHTML = '';
+  elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
   const searchInfo = elements.input.value.trim();
+  console.log(elements.input.value.trim());
   if (searchInfo === '') {
     return;
   }
-  serviceSearch(searchInfo)
-    .then(data => {
-      elements.container.insertAdjacentHTML('beforeend', createMarkup(data));
-      lightbox.refresh();
-      const { height: cardHeight } = document
-        .querySelector('.gallery')
-        .firstElementChild.getBoundingClientRect();
+  try {
+    const data = await serviceSearch(searchInfo);
+    elements.container.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    lightbox.refresh();
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
 
-      window.scrollBy({
-        top: cardHeight * 2,
-        behavior: 'smooth',
-      });
-      if (data.hits.length) {
-        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`);
-      } else {
-        Notiflix.Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-        elements.container.innerHTML = '';
-      }
-      const totalPages = data.totalHits / data.hits.length;
-      if (currentPage < totalPages) {
-        elements.btnLoad.classList.replace('load-more-hidden', 'load-more');
-      }
-    })
-    .catch(err => {
-      console.log(err);
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
+    });
+    if (data.hits.length) {
+      Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`);
+    } else {
       Notiflix.Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
-    });
+      elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
+      elements.container.innerHTML = '';
+    }
+    const totalPages = data.totalHits / data.hits.length;
+    console.log(totalPages);
+    if (currentPage < totalPages) {
+      elements.btnLoad.classList.replace('load-more-hidden', 'load-more');
+    }
+  } catch (err) {
+    console.log(err);
+    Notiflix.Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+    elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
+    elements.container.innerHTML = '';
+  }
 }
 
-function handlerLoadMore() {
+async function handlerLoadMore() {
   currentPage += 1;
-  serviceSearch(elements.input.value)
-    .then(data => {
-      elements.container.insertAdjacentHTML('beforeend', createMarkup(data));
-      lightbox.refresh();
-      const { height: cardHeight } = document
-        .querySelector('.gallery')
-        .firstElementChild.getBoundingClientRect();
+  try {
+    const data = await serviceSearch(elements.input.value);
 
-      window.scrollBy({
-        top: cardHeight * 2,
-        behavior: 'smooth',
-      });
-      if (currentPage >= data.totalHits / data.hits.length) {
-        elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
-      }
-    })
-    .catch(err => {
-      console.log(err);
-      elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
+    elements.container.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+    lightbox.refresh();
+    const { height: cardHeight } = document
+      .querySelector('.gallery')
+      .firstElementChild.getBoundingClientRect();
+
+    window.scrollBy({
+      top: cardHeight * 2,
+      behavior: 'smooth',
     });
+    if (currentPage >= data.totalHits / data.hits.length) {
+      elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
+    }
+  } catch (err) {
+    console.log(err);
+    elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
+  }
 }
 
 function createMarkup(data) {
-  return data.hits
+  return data
     .map(
       ({
         tags,
@@ -111,16 +116,16 @@ function createMarkup(data) {
           <img class="image" src="${webformatURL}" alt="${tags}" loading="lazy" width="335" height="210" />
           <div class="info">
             <p class="info-item">
-              <b>Likes</b><br>${likes}
+              <b>Likes</b>${likes}
             </p>
             <p class="info-item">
-              <b>Views</b><br>${views}
+              <b>Views</b>${views}
             </p>
             <p class="info-item">
-              <b>Comments</b><br>${comments}
+              <b>Comments</b>${comments}
             </p>
             <p class="info-item">
-              <b>Downloads</b><br>${downloads}
+              <b>Downloads</b>${downloads}
             </p>
           </div>
         </div>
@@ -128,4 +133,4 @@ function createMarkup(data) {
     )
     .join('');
 }
-// trim()
+
