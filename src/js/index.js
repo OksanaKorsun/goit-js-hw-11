@@ -44,14 +44,6 @@ async function handlerSubmit(event) {
     const data = await serviceSearch(searchInfo);
     elements.container.insertAdjacentHTML('beforeend', createMarkup(data.hits));
     lightbox.refresh();
-    const { height: cardHeight } = document
-      .querySelector('.gallery')
-      .firstElementChild.getBoundingClientRect();
-
-    window.scrollBy({
-      top: cardHeight * 2,
-      behavior: 'smooth',
-    });
     if (data.hits.length) {
       Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`);
     } else {
