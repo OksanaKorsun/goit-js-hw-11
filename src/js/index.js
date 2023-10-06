@@ -2,6 +2,7 @@ import Notiflix from 'notiflix';
 import axios from 'axios';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import { createMarkup } from './markup';
 
 const elements = {
   form: document.querySelector('.js-search-form'),
@@ -10,6 +11,8 @@ const elements = {
   input: document.querySelector('.js-form-input'),
 };
 let currentPage = 1;
+const perPage = 40;
+// axios.defaults.baseURL = 'https://pixabay.com/api/';
 elements.form.addEventListener('submit', handlerSubmit);
 elements.btnLoad.addEventListener('click', handlerLoadMore);
 
@@ -24,7 +27,7 @@ async function serviceSearch(searchInfo) {
     orientation: 'horizontal',
     safesearch: true,
     page: currentPage,
-    per_page: 40,
+    per_page: perPage,
   });
 
   const responce = await axios.get(`${BASE_URL}?${params}`);
@@ -34,10 +37,12 @@ async function serviceSearch(searchInfo) {
 async function handlerSubmit(event) {
   event.preventDefault();
   elements.container.innerHTML = '';
+  currentPage = 1;
   elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
   const searchInfo = elements.input.value.trim();
   console.log(elements.input.value.trim());
   if (searchInfo === '') {
+    Notiflix.Notify.failure('Please enter a query in the search field.');
     return;
   }
   try {
@@ -53,7 +58,7 @@ async function handlerSubmit(event) {
       elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
       elements.container.innerHTML = '';
     }
-    const totalPages = data.totalHits / data.hits.length;
+    const totalPages = Math.ceil(data.totalHits / perPage);
     console.log(totalPages);
     if (currentPage < totalPages) {
       elements.btnLoad.classList.replace('load-more-hidden', 'load-more');
@@ -68,10 +73,19 @@ async function handlerSubmit(event) {
   }
 }
 
+elements.input.addEventListener('input', () => {
+  if (elements.input.value === '') {
+    elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
+    elements.container.innerHTML = '';
+  }
+})
+
 async function handlerLoadMore() {
   currentPage += 1;
+  console.log(currentPage);
   try {
     const data = await serviceSearch(elements.input.value);
+    console.log(data);
 
     elements.container.insertAdjacentHTML('beforeend', createMarkup(data.hits));
     lightbox.refresh();
@@ -83,7 +97,9 @@ async function handlerLoadMore() {
       top: cardHeight * 2,
       behavior: 'smooth',
     });
-    if (currentPage >= data.totalHits / data.hits.length) {
+    const totalPages = Math.ceil(data.totalHits / perPage);
+    console.log(totalPages);
+    if (currentPage >= totalPages) {
       elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
     }
   } catch (err) {
@@ -91,38 +107,3 @@ async function handlerLoadMore() {
     elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
   }
 }
-
-function createMarkup(data) {
-  return data
-    .map(
-      ({
-        tags,
-        webformatURL,
-        largeImageURL,
-        views,
-        downloads,
-        likes,
-        comments,
-      }) => `<a class="info-link" href="${largeImageURL}">
-        <div class="photo-card">
-          <img class="image" src="${webformatURL}" alt="${tags}" loading="lazy" width="335" height="210" />
-          <div class="info">
-            <p class="info-item">
-              <b>Likes</b>${likes}
-            </p>
-            <p class="info-item">
-              <b>Views</b>${views}
-            </p>
-            <p class="info-item">
-              <b>Comments</b>${comments}
-            </p>
-            <p class="info-item">
-              <b>Downloads</b>${downloads}
-            </p>
-          </div>
-        </div>
-      </a>`
-    )
-    .join('');
-}
-
