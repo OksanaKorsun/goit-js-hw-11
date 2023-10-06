@@ -1,8 +1,8 @@
 import Notiflix from 'notiflix';
-import axios from 'axios';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 import { createMarkup } from './markup';
+import { serviceSearch } from './api-search';
 
 const elements = {
   form: document.querySelector('.js-search-form'),
@@ -10,29 +10,12 @@ const elements = {
   btnLoad: document.querySelector('.js-load-more'),
   input: document.querySelector('.js-form-input'),
 };
+const lightbox = new SimpleLightbox('.gallery a');
 let currentPage = 1;
 const perPage = 40;
-// axios.defaults.baseURL = 'https://pixabay.com/api/';
+
 elements.form.addEventListener('submit', handlerSubmit);
 elements.btnLoad.addEventListener('click', handlerLoadMore);
-
-const lightbox = new SimpleLightbox('.gallery a');
-
-async function serviceSearch(searchInfo) {
-  const BASE_URL = 'https://pixabay.com/api/';
-  const params = new URLSearchParams({
-    key: '39210626-76714a19412a01689ebadc3ae',
-    q: searchInfo,
-    image_type: 'photo',
-    orientation: 'horizontal',
-    safesearch: true,
-    page: currentPage,
-    per_page: perPage,
-  });
-
-  const responce = await axios.get(`${BASE_URL}?${params}`);
-  return await responce.data;
-}
 
 async function handlerSubmit(event) {
   event.preventDefault();
@@ -107,3 +90,4 @@ async function handlerLoadMore() {
     elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
   }
 }
+export { currentPage, perPage };
