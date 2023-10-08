@@ -22,14 +22,14 @@ async function handlerSubmit(event) {
   elements.container.innerHTML = '';
   currentPage = 1;
   elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
-  const searchInfo = elements.input.value.trim();
+  let searchInfo = elements.input.value.trim();
   console.log(elements.input.value.trim());
   if (searchInfo === '') {
     Notiflix.Notify.failure('Please enter a query in the search field.');
     return;
   }
   try {
-    const data = await serviceSearch(searchInfo);
+    const data = await serviceSearch(searchInfo, currentPage, perPage);
     if (data.hits.length) {
       elements.container.insertAdjacentHTML(
         'beforeend',
@@ -45,7 +45,6 @@ async function handlerSubmit(event) {
       elements.container.innerHTML = '';
     }
     const totalPages = Math.ceil(data.totalHits / perPage);
-    console.log(totalPages);
     if (currentPage < totalPages) {
       elements.btnLoad.classList.replace('load-more-hidden', 'load-more');
     }
@@ -68,10 +67,9 @@ elements.input.addEventListener('input', () => {
 
 async function handlerLoadMore() {
   currentPage += 1;
-  console.log(currentPage);
+  const searchInfo = elements.input.value.trim();
   try {
-    const data = await serviceSearch(elements.input.value);
-    console.log(data);
+    const data = await serviceSearch(searchInfo, currentPage, perPage);
 
     elements.container.insertAdjacentHTML('beforeend', createMarkup(data.hits));
     lightbox.refresh();
@@ -93,4 +91,3 @@ async function handlerLoadMore() {
     elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
   }
 }
-export { currentPage, perPage };

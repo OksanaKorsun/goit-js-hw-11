@@ -1,7 +1,6 @@
 import axios from 'axios';
-import { currentPage, perPage } from './index';
 // axios.defaults.baseURL = 'https://pixabay.com/api/';
-export async function serviceSearch(searchInfo) {
+export async function serviceSearch(searchInfo, currentPage, perPage) {
   const BASE_URL = 'https://pixabay.com/api/';
   const params = new URLSearchParams({
     key: '39210626-76714a19412a01689ebadc3ae',
