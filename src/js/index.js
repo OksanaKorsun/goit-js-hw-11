@@ -30,9 +30,12 @@ async function handlerSubmit(event) {
   }
   try {
     const data = await serviceSearch(searchInfo);
-    elements.container.insertAdjacentHTML('beforeend', createMarkup(data.hits));
-    lightbox.refresh();
     if (data.hits.length) {
+      elements.container.insertAdjacentHTML(
+        'beforeend',
+        createMarkup(data.hits)
+      );
+      lightbox.refresh();
       Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`);
     } else {
       Notiflix.Notify.failure(
@@ -61,7 +64,7 @@ elements.input.addEventListener('input', () => {
     elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
     elements.container.innerHTML = '';
   }
-})
+});
 
 async function handlerLoadMore() {
   currentPage += 1;
