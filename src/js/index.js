@@ -22,7 +22,7 @@ async function handlerSubmit(event) {
   elements.container.innerHTML = '';
   currentPage = 1;
   elements.btnLoad.classList.replace('load-more', 'load-more-hidden');
-  let searchInfo = elements.input.value.trim();
+  const searchInfo = elements.input.value.trim();
   console.log(elements.input.value.trim());
   if (searchInfo === '') {
     Notiflix.Notify.failure('Please enter a query in the search field.');
